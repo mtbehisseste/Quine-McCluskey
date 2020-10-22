@@ -39,16 +39,17 @@ vector<int> dec_to_bits(int a)
     return ret;
 }
 
-// determine whether only one bit is different int two vector
-bool one_diff(vector<int> a, vector<int> b)
+// determine whether only one bit is different in two vector
+bool one_bit_diff(vector<int> a, vector<int> b)
 {
     bool diff = 0;
     for (int i = 0; i < a.size(); ++i) {
         if (a[i] != b[i]) {
+            // FIXME I wonder why `~` operator doesn't work
+            // diff = (~diff);
             diff = diff == 1 ? 0 : 1;
-            if (diff == 0) { 
+            if (diff == 0)  // second different appears
                 return 0;
-            }
         }
     }
     return 1;
@@ -70,8 +71,7 @@ void merge_neighbor_groups(array<vector<vector<int> >, 10> &group)
         for (int j = 0; j < group[i].size(); ++j) {
             for (int k = 0; k < group[i+1].size(); ++k) {
                 cout << "i k: " << i << ' ' << k << endl;
-                // they only have 1 bit different
-                if (one_diff(group[i][j], group[i+1][k])) {
+                if (one_bit_diff(group[i][j], group[i+1][k])) {
                     for (int m = 0; m < group[i][j].size(); ++m) {
                         cout << group[i][j][m];
                     }
