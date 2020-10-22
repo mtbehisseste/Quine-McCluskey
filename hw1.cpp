@@ -64,6 +64,17 @@ void grouping(vector<int> &input_set, vector<vector<vector<int> > > &group)
     }
 }
 
+bool check_exist(vector<vector<vector<int> > > new_group, vector<int> tmp)
+{
+    for (int i = 0; i < new_group.size(); ++i) {
+        for (int j = 0; j < new_group[i].size(); ++j) {
+            if (new_group[i][j] == tmp)
+                return true;
+        }
+    }
+    return false;
+}
+
 vector<vector<vector<int> > > merge_neighbor_groups(vector<vector<vector<int> > > &group)
 {
     cout << group.size() << endl;
@@ -83,7 +94,8 @@ vector<vector<vector<int> > > merge_neighbor_groups(vector<vector<vector<int> > 
                     // new_group[i] means the merge of group[i] and group[i+1]
                     vector<int> tmp = group[i][j];  // 2 is don't care bit
                     tmp[diff_bit] = 2;
-                    new_group[i].push_back(tmp);
+                    if (!check_exist(new_group, tmp))
+                        new_group[i].push_back(tmp);
                 }
             }
         }
