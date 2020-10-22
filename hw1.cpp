@@ -40,19 +40,18 @@ vector<int> dec_to_bits(int a)
 }
 
 // determine whether only one bit is different in two vector
-bool one_bit_diff(vector<int> a, vector<int> b)
+// if so, return the index of the different bit
+int one_bit_diff(vector<int> a, vector<int> b)
 {
-    bool diff = 0;
+    int diff = -1;
     for (int i = 0; i < a.size(); ++i) {
         if (a[i] != b[i]) {
-            // FIXME I wonder why `~` operator doesn't work
-            // diff = (~diff);
-            diff = diff == 1 ? 0 : 1;
-            if (diff == 0)  // second different appears
-                return 0;
+            if (diff != -1)  // second different appears
+                return -1;
+            diff = i;
         }
     }
-    return 1;
+    return diff;
 }
 
 void grouping(vector<int> &input_set, array<vector<vector<int> >, 10> &group)
@@ -66,12 +65,13 @@ void grouping(vector<int> &input_set, array<vector<vector<int> >, 10> &group)
 
 void merge_neighbor_groups(array<vector<vector<int> >, 10> &group)
 {
+    int diff_bit;
     for (int i = 0; i < 10 - 1; ++i) {
         // compare each pair of number in two group
         for (int j = 0; j < group[i].size(); ++j) {
             for (int k = 0; k < group[i+1].size(); ++k) {
-                cout << "i k: " << i << ' ' << k << endl;
-                if (one_bit_diff(group[i][j], group[i+1][k])) {
+                diff_bit = one_bit_diff(group[i][j], group[i+1][k]);
+                if (diff_bit != -1) {
                     for (int m = 0; m < group[i][j].size(); ++m) {
                         cout << group[i][j][m];
                     }
@@ -79,6 +79,8 @@ void merge_neighbor_groups(array<vector<vector<int> >, 10> &group)
                     for (int m = 0; m < group[i][j].size(); ++m) {
                         cout << group[i+1][k][m];
                     }
+                    cout << endl;
+                    cout << diff_bit << endl;
                 }
             }
         }
