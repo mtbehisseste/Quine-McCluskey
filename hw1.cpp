@@ -8,6 +8,7 @@ using namespace std;
 
 map<int, int> one_bit_count;
 int number_of_bits = 0;
+vector<vector<int> > primary_implicants;
 
 // create map of number of bit 1 in each number
 // e.g. 0->0, 5->2
@@ -63,45 +64,40 @@ void grouping(vector<int> &input_set, vector<vector<vector<int> > > &group)
     }
 }
 
-void merge_neighbor_groups(vector<vector<vector<int> > > &group,
-        vector<vector<vector<int> > > &candidate)
+vector<vector<vector<int> > > merge_neighbor_groups(vector<vector<vector<int> > > &group)
 {
+    cout << group.size() << endl;
     int diff_bit;
+    vector<vector<vector<int> > > new_group;
+    int pi_matrix[group.size()][1024] = {0};  // matrix that record if merge happends
     for (int i = 0; i < group.size() - 1; ++i) {
-        candidate.push_back({});
+        new_group.push_back({});
         // compare each pair of number in two group
         for (int j = 0; j < group[i].size(); ++j) {
             for (int k = 0; k < group[i+1].size(); ++k) {
                 diff_bit = one_bit_diff(group[i][j], group[i+1][k]);
                 if (diff_bit != -1) {  // there's only 1 bit different
-                    for (int m = 0; m < group[i][j].size(); ++m) {
-                        cout << group[i][j][m];
-                    }
-                    cout << endl;
-                    for (int m = 0; m < group[i+1][k].size(); ++m) {
-                        cout << group[i+1][k][m];
-                    }
-                    cout << endl;
-                    cout << diff_bit << endl;
+                    pi_matrix[i][j] = 1;
+                    pi_matrix[i+1][k] = 1;
 
-                    // candidate[i] means the merge of group[i] and group[i+1]
+                    // new_group[i] means the merge of group[i] and group[i+1]
                     vector<int> tmp = group[i][j];  // 2 is don't care bit
                     tmp[diff_bit] = 2;
-                    candidate[i].push_back(tmp);
+                    new_group[i].push_back(tmp);
                 }
             }
         }
     }
-    cout << candidate.size() << endl;
-    for (int i = 0; i < candidate.size(); ++i) {
-        for (int j = 0; j < candidate[i].size(); ++j) {
-            for (int k = 0; k < 4; ++k) {
-                cout << candidate[i][j][k];
-            }
-            cout << ' ';
+
+    // record primary implicants
+    for (int i = 0; i < group.size(); ++i) {
+        for (int j = 0; j < group[i].size(); ++j) {
+            if (pi_matrix[i][j] == 0)  // for j-th index in group[i], no one-diff in group[i+1]
+                primary_implicants.push_back(group[i][j]);
         }
-        cout << endl;
     }
+    
+    return new_group;
 }
 
 int main()
@@ -119,13 +115,22 @@ int main()
     for (int i = 0; i <= number_of_bits; ++i)
         group.push_back({});
 
-    vector<vector<vector<int> > > candidate;
 
     // group each number with the number of bit 1 of it
     grouping(on_set, group); 
     grouping(dontcare_set, group); 
 
-    merge_neighbor_groups(group, candidate);
+    while (group.size())
+        group = merge_neighbor_groups(group);
+
+    cout << ".pi " << primary_implicants.size() << endl;
+    int pi_size = primary_implicants.size();
+    for (int i = 0; i < (pi_size > 20 ? 20 : pi_size); ++i) {
+        for (int j = 0; j < primary_implicants[i].size(); ++j) {
+            cout << primary_implicants[i][j];
+        }
+        cout << endl;
+    }
 
     return 0;
 }
