@@ -6,11 +6,11 @@ Description:
     cover based on column covering method. The target is to generate a sum-of-products expression of this 
     function with minimum number of literals.
 
-Compile:
+Compile: (This will create executable "hw1.o")
     $ make
 
 Usage:
-    $ ./hw1 [input file name] [output file name] 
+    $ ./hw1.o [input file name] [output file name]
 
 Implementation steps:
     1. Read input from file using `fstream` and `getline`.
