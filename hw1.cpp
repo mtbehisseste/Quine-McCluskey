@@ -1,6 +1,8 @@
 #include <iostream>
+#include <cstdio>
 #include <map>
 #include <vector>
+#include <set>
 #include <cmath>
 #include <algorithm>
 
@@ -8,7 +10,8 @@ using namespace std;
 
 map<int, int> one_bit_count;
 int number_of_bits = 0;
-vector<vector<int> > primary_implicants;
+set<vector<int> > primary_implicants;
+set<vector<int> > minimum_covering;
 
 // create map of number of bit 1 in each number
 // e.g. 0->0, 5->2
@@ -75,12 +78,35 @@ bool check_exist(vector<vector<vector<int> > > new_group, vector<int> tmp)
     return false;
 }
 
+// given a primary implicant, return all numbers covered by this PI.
+set<int> pi_covered(vector<int> pi) {
+    set<int> tmp;
+    for (int i = 0; i < pi.size(); ++i) {
+        if (pi[i] == 2) {
+            // recursively strip don't care bits and get covered numbers
+            pi[i] = 0;
+            set<int> zero = pi_covered(pi);
+            pi[i] = 1;
+            set<int> one = pi_covered(pi);
+            for (int j = 0; j < zero.size(); ++j)
+                tmp.insert(*next(zero.begin(), j));
+            for (int j = 0; j < one.size(); ++j)
+                tmp.insert(*next(one.begin(), j));
+        }
+    }
+
+    int ans = 0;
+    for (int i = pi.size() - 1; i >= 0; --i)
+        ans += (int)(pow(2, pi.size() - 1 - i)) * pi[i];
+    tmp.insert(ans);
+    return tmp;
+}
+
 vector<vector<vector<int> > > find_primary_implcants(vector<vector<vector<int> > > &group)
 {
-    cout << group.size() << endl;
     int diff_bit;
     vector<vector<vector<int> > > new_group;
-    int pi_matrix[group.size()][1024] = {0};  // matrix that record if merge happends
+    int pi_matrix[group.size()][1024] = {};  // matrix that record if merge happends
     for (int i = 0; i < group.size() - 1; ++i) {
         new_group.push_back({});
         // compare each pair of number in two group
@@ -105,21 +131,118 @@ vector<vector<vector<int> > > find_primary_implcants(vector<vector<vector<int> >
     for (int i = 0; i < group.size(); ++i) {
         for (int j = 0; j < group[i].size(); ++j) {
             if (pi_matrix[i][j] == 0)  // for j-th index in group[i], no one-diff in group[i+1]
-                primary_implicants.push_back(group[i][j]);
+                primary_implicants.insert(group[i][j]);
         }
     }
     
     return new_group;
 }
 
+void find_min_SOP(vector<int> on_set)
+{
+    // the map stores the value and its corresponding index in on_set
+    map<int, int> on_set_index;
+    map<int, int> on_set_index_rev;
+    for (int i = 0; i < on_set.size(); ++i) {
+        on_set_index.insert(make_pair(on_set[i], i));
+        on_set_index_rev.insert(make_pair(i, on_set[i]));
+    }
+
+    int count_column[on_set.size()] = {};  // count the number of primary implicants
+                                           // that covers the number in on_set
+    int count_row[primary_implicants.size()] = {};  // count the number of number in
+                                                    // on_set that is covered by each PI
+    int table[primary_implicants.size()][on_set.size()] = {};
+
+    // build table
+    vector<set<int> > pic_group;
+    for (int i = 0; i < primary_implicants.size(); ++i) {
+        set<int> pic = pi_covered(*next(primary_implicants.begin(), i));
+        for (int k = 0; k < pic.size(); ++k) {
+            int n = *next(pic.begin(), k);
+            // if the covered number is in on_set
+            if (on_set_index.find(n) != on_set_index.end()) {
+                count_column[on_set_index[n]]++;
+                count_row[i]++;
+                table[i][on_set_index[n]] = 1;
+            }
+        }
+        pic_group.push_back(pic);
+    }
+
+    cout << endl;
+    for (int i = 0; i < primary_implicants.size(); ++i) {
+        for (int j = 0; j < on_set.size(); ++j) {
+            cout << table[i][j] << ' ';
+        }
+        cout << endl;
+    }
+
+    // find essential implicant
+    for (int i = 0; i < on_set.size(); ++i) {
+        if (count_column[i] == 1) {
+            // for all numbers that are covered with this PI
+            for (int j = 0; j < pic_group.size(); ++j) {
+                // if the covered number is in on_set
+                if (pic_group[j].find(on_set_index_rev[i]) != pic_group[j].end()) {
+                    // for each number covered by the primary implicant
+                    for (auto k: pic_group[j]) {
+                        // for the whole column of the number
+                        for (int m = 0; m < pic_group.size(); ++m) {
+                            if (table[m][on_set_index[k]] == 1) {
+                                count_row[m]--;
+                            }
+                            table[m][on_set_index[k]] = 0;
+                        }
+                        minimum_covering.insert(*next(primary_implicants.begin(), j));
+                        count_column[i] = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    cout << endl;
+    for (int i = 0; i < primary_implicants.size(); ++i) {
+        for (int j = 0; j < on_set.size(); ++j) {
+            cout << table[i][j] << ' ';
+        }
+        cout << endl;
+    }
+
+    for (int i = 0; i < primary_implicants.size(); ++i) {
+        cout << count_row[i] << endl;
+    }
+    
+    while (*max_element(count_row,
+                count_row + primary_implicants.size()) > 0) {
+        int max_index = distance(count_row,
+                max_element(count_row, count_row + primary_implicants.size()));
+        cout << max_index << endl;
+        // for each number covered by the primary implicant
+        for (auto k: pic_group[max_index]) {
+            // for the whole column of the number
+            for (int m = 0; m < pic_group.size(); ++m) {
+                if (table[m][on_set_index[k]] == 1)
+                    count_row[m]--;
+                table[m][on_set_index[k]] = 0;
+            }
+            minimum_covering.insert(*next(primary_implicants.begin(), max_index));
+            count_column[k] = 0;
+        }
+    }
+}
+
 int main()
 {
     // TODO read input from file
     number_of_bits = 4;
-    // vector<int> on_set = {4, 5, 6, 7, 8, 9, 10, 13};
+    // vector<int> on_set = {4, 5, 6, 8, 9, 10, 13};
     // vector<int> dontcare_set = {0, 7, 15};
-    vector<int> on_set = {4, 5, 6, 8, 9, 10, 13};
-    vector<int> dontcare_set = {0, 7, 15};
+    // vector<int> on_set = {2,6,8,9,10,11,14,15};
+    // vector<int> dontcare_set = {};
+    vector<int> on_set = {4, 8, 10, 11, 12, 15};
+    vector<int> dontcare_set = {9, 14};
 
     create_one_bit_count();
 
@@ -135,14 +258,34 @@ int main()
     while (group.size())
         group = find_primary_implcants(group);
 
+    // output primary implicants
     cout << ".pi " << primary_implicants.size() << endl;
     int pi_size = primary_implicants.size();
     for (int i = 0; i < (pi_size > 20 ? 20 : pi_size); ++i) {
-        for (int j = 0; j < primary_implicants[i].size(); ++j) {
-            cout << primary_implicants[i][j];
+        for (int j = 0; j < (*next(primary_implicants.begin(), i)).size(); ++j) {
+            if ((*next(primary_implicants.begin(), i))[j] == 2)
+                cout << '-';
+            else
+                cout << (*next(primary_implicants.begin(), i))[j];
         }
         cout << endl;
     }
+
+    find_min_SOP(on_set);
+
+    // output minimum cover
+    cout << ".mc " << minimum_covering.size() << endl;
+    for (int i = 0; i < minimum_covering.size(); ++i) {
+        for (int j = 0; j < (*next(minimum_covering.begin(), i)).size(); ++j) {
+            if ((*next(minimum_covering.begin(), i))[j] == 2)
+                cout << '-';
+            else
+                cout << (*next(minimum_covering.begin(), i))[j];
+        }
+        cout << endl;
+    }
+
+    // TODO calculate cost
 
     return 0;
 }
