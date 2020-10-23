@@ -5,6 +5,8 @@
 #include <set>
 #include <cmath>
 #include <algorithm>
+#include <fstream>
+#include <cstring>
 
 using namespace std;
 
@@ -245,17 +247,58 @@ int calc_cost()
     return cost;
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-    // TODO read input from file
-    number_of_bits = 5;
-    vector<int> on_set = {4, 5, 6, 8, 9, 10, 13};
-    vector<int> dontcare_set = {0, 7, 15};
+    if (argc != 3) {
+        cout << "Usage: ./hw1 [input file name] [output file name]\n";
+        exit(-1);
+    }
+        
+    fstream finput, foutput;
+    finput.open(argv[1], ios::in);
+    foutput.open(argv[2], ios::out);
+    if (!finput || !foutput) {
+        cout << "Error reading input/output file\n";
+        exit(-1);
+    }
+
+    vector<int> on_set, dontcare_set;
+
+    // read input from file
+    char line[1000];
+    char *token;
+    finput.getline(line, 1000);
+    token = strtok(line, " ");  // ".i"
+    token = strtok(NULL, " ");  // number_of_bits
+    number_of_bits = atoi(token);
+    
+    // read on set
+    finput.getline(line, 1000);  // ".m"
+    finput.getline(line, 1000);  // on set number
+    token = strtok(line, " ");
+    while (token) {
+        on_set.push_back(atoi(token));
+        token = strtok(NULL, " ");
+    }
+    
+    // read don't care set
+    finput.getline(line, 1000);  // ".m"
+    finput.getline(line, 1000);  // on set number
+    token = strtok(line, " ");
+    while (token) {
+        dontcare_set.push_back(atoi(token));
+        token = strtok(NULL, " ");
+    }
+    
+    // number_of_bits = 5;
+    // vector<int> on_set = {4, 5, 6, 8, 9, 10, 13};
+    // vector<int> dontcare_set = {0, 7, 15};
     // vector<int> on_set = {2,6,8,9,10,11,14,15};
     // vector<int> dontcare_set = {};
     // vector<int> on_set = {4, 8, 10, 11, 12, 15};
     // vector<int> dontcare_set = {9, 14};
 
+    // count number of bit 1 for all number below 2^(number_of_bit)
     create_one_bit_count();
 
     vector<vector<vector<int> > > group;  // group of one 1, two 1s, three 1s, etc
@@ -267,37 +310,42 @@ int main()
     grouping(on_set, group); 
     grouping(dontcare_set, group); 
 
+    // find primary implicants
     while (group.size())
         group = find_primary_implcants(group);
 
-    // output primary implicants
-    cout << ".pi " << primary_implicants.size() << endl;
+    // output primary implicants to file
+    foutput << ".pi " << primary_implicants.size() << endl;
     int pi_size = primary_implicants.size();
     for (int i = 0; i < (pi_size > 20 ? 20 : pi_size); ++i) {
         for (int j = 0; j < (*next(primary_implicants.begin(), i)).size(); ++j) {
             if ((*next(primary_implicants.begin(), i))[j] == 2)
-                cout << '-';
+                foutput << '-';
             else
-                cout << (*next(primary_implicants.begin(), i))[j];
+                foutput << (*next(primary_implicants.begin(), i))[j];
         }
-        cout << endl;
+        foutput << endl;
     }
 
+    // find minimum cover
     find_min_SOP(on_set);
 
-    // output minimum cover
-    cout << ".mc " << minimum_covering.size() << endl;
+    // output minimum cover to file
+    foutput << endl;
+    foutput << ".mc " << minimum_covering.size() << endl;
     for (int i = 0; i < minimum_covering.size(); ++i) {
         for (int j = 0; j < (*next(minimum_covering.begin(), i)).size(); ++j) {
             if ((*next(minimum_covering.begin(), i))[j] == 2)
-                cout << '-';
+                foutput << '-';
             else
-                cout << (*next(minimum_covering.begin(), i))[j];
+                foutput << (*next(minimum_covering.begin(), i))[j];
         }
-        cout << endl;
+        foutput << endl;
     }
 
-    cout << "cost=" << calc_cost() << endl;
+    foutput << "cost=" << calc_cost() << endl;
 
+    finput.close();
+    foutput.close();
     return 0;
 }
