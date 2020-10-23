@@ -172,14 +172,6 @@ void find_min_SOP(vector<int> on_set)
         pic_group.push_back(pic);
     }
 
-    cout << endl;
-    for (int i = 0; i < primary_implicants.size(); ++i) {
-        for (int j = 0; j < on_set.size(); ++j) {
-            cout << table[i][j] << ' ';
-        }
-        cout << endl;
-    }
-
     // find essential implicant
     for (int i = 0; i < on_set.size(); ++i) {
         if (count_column[i] == 1) {
@@ -203,24 +195,11 @@ void find_min_SOP(vector<int> on_set)
             }
         }
     }
-
-    cout << endl;
-    for (int i = 0; i < primary_implicants.size(); ++i) {
-        for (int j = 0; j < on_set.size(); ++j) {
-            cout << table[i][j] << ' ';
-        }
-        cout << endl;
-    }
-
-    for (int i = 0; i < primary_implicants.size(); ++i) {
-        cout << count_row[i] << endl;
-    }
     
     while (*max_element(count_row,
                 count_row + primary_implicants.size()) > 0) {
         int max_index = distance(count_row,
                 max_element(count_row, count_row + primary_implicants.size()));
-        cout << max_index << endl;
         // for each number covered by the primary implicant
         for (auto k: pic_group[max_index]) {
             // for the whole column of the number
