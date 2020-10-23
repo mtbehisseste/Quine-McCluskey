@@ -195,6 +195,8 @@ void find_min_SOP(vector<int> on_set)
         }
     }
     
+    // for the remaining rows, find the one that can cover the most 1s
+    // that is, the row with maximum value in count_row
     while (*max_element(count_row,
                 count_row + primary_implicants.size()) > 0) {
         int max_index = distance(count_row,
@@ -286,7 +288,6 @@ int main(int argc, char *argv[])
     vector<vector<vector<int> > > group;  // group of one 1, two 1s, three 1s, etc
     for (int i = 0; i <= number_of_bits; ++i)
         group.push_back({});
-
 
     // group each number with the number of bit 1 of it
     grouping(on_set, group); 
