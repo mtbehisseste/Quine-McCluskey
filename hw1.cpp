@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cstdio>
 #include <map>
 #include <vector>
 #include <set>
@@ -235,9 +234,13 @@ int main(int argc, char *argv[])
         
     fstream finput, foutput;
     finput.open(argv[1], ios::in);
+    if (!finput) {
+        cout << "Error opening input file\n";
+        exit(-1);
+    }
     foutput.open(argv[2], ios::out);
-    if (!finput || !foutput) {
-        cout << "Error reading input/output file\n";
+    if (!foutput) {
+        cout << "Error opening output file\n";
         exit(-1);
     }
 
