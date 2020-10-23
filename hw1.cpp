@@ -80,7 +80,8 @@ bool check_exist(vector<vector<vector<int> > > new_group, vector<int> tmp)
 }
 
 // given a primary implicant, return all numbers covered by this PI.
-set<int> pi_covered(vector<int> pi) {
+set<int> pi_covered(vector<int> pi)
+{
     set<int> tmp;
     for (int i = 0; i < pi.size(); ++i) {
         if (pi[i] == 2) {
