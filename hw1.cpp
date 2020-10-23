@@ -75,7 +75,7 @@ bool check_exist(vector<vector<vector<int> > > new_group, vector<int> tmp)
     return false;
 }
 
-vector<vector<vector<int> > > merge_neighbor_groups(vector<vector<vector<int> > > &group)
+vector<vector<vector<int> > > find_primary_implcants(vector<vector<vector<int> > > &group)
 {
     cout << group.size() << endl;
     int diff_bit;
@@ -133,7 +133,7 @@ int main()
     grouping(dontcare_set, group); 
 
     while (group.size())
-        group = merge_neighbor_groups(group);
+        group = find_primary_implcants(group);
 
     cout << ".pi " << primary_implicants.size() << endl;
     int pi_size = primary_implicants.size();
