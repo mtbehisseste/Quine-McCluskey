@@ -233,16 +233,28 @@ void find_min_SOP(vector<int> on_set)
     }
 }
 
+int calc_cost()
+{
+    int cost = 0;
+    for (int i = 0; i < minimum_covering.size(); ++i) {
+        vector<int> tmp = *next(minimum_covering.begin(), i);
+        int sz = tmp.size();
+        cost += count(tmp.begin(), tmp.begin() + sz, 1);
+        cost += count(tmp.begin(), tmp.begin() + sz, 0);
+    }
+    return cost;
+}
+
 int main()
 {
     // TODO read input from file
-    number_of_bits = 4;
-    // vector<int> on_set = {4, 5, 6, 8, 9, 10, 13};
-    // vector<int> dontcare_set = {0, 7, 15};
+    number_of_bits = 5;
+    vector<int> on_set = {4, 5, 6, 8, 9, 10, 13};
+    vector<int> dontcare_set = {0, 7, 15};
     // vector<int> on_set = {2,6,8,9,10,11,14,15};
     // vector<int> dontcare_set = {};
-    vector<int> on_set = {4, 8, 10, 11, 12, 15};
-    vector<int> dontcare_set = {9, 14};
+    // vector<int> on_set = {4, 8, 10, 11, 12, 15};
+    // vector<int> dontcare_set = {9, 14};
 
     create_one_bit_count();
 
@@ -285,7 +297,7 @@ int main()
         cout << endl;
     }
 
-    // TODO calculate cost
+    cout << "cost=" << calc_cost() << endl;
 
     return 0;
 }
